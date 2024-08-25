@@ -1,34 +1,44 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors()); // Use CORS middleware
 
-// Directly use the connection string (replace `<your_connection_string>` with your actual MongoDB Atlas connection string)
-mongoose.connect('MONGO_URI=mongodb+srv://raviravi18425:ravishankar@cluster0.1aej7.mongodb.net/sample?retryWrites=true&w=majority&appName=Cluster0');
+mongoose.connect('mongodb+srv://raviravi18425:ravishankar@cluster0.1aej7.mongodb.net/sample?retryWrites=true&w=majority&appName=Cluster0')
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch(err => console.error('Failed to connect to MongoDB', err));
 
-// Define a schema and model for the 'number1' collection
-const number1Schema = new mongoose.Schema({
-  content: String,
-});
+const textSchema = new mongoose.Schema({
+  content: String
+}, { collection: 'number1' });
 
-const Number1 = mongoose.model('Number1', number1Schema, 'number1');
+const Text = mongoose.model('text', textSchema);
 
-// Route to add text to the 'number1' collection
-app.post('/api/text', async (req, res) => {
+app.post('/save-text', async (req, res) => {
   const { content } = req.body;
-  const newText = new Number1({ content });
-  await newText.save();
-  res.status(201).send(newText);
+
+  const text = new Text({ content });
+
+  try {
+    await text.save();
+    res.status(201).send('Text saved successfully!');
+  } catch (error) {
+    res.status(500).send('Error saving text: ' + error.message);
+  }
 });
 
-// Route to get all text from the 'number1' collection
-app.get('/api/text', async (req, res) => {
-  const texts = await Number1.find();
-  res.status(200).send(texts);
+// New route to fetch all texts
+app.get('/get-texts', async (req, res) => {
+  try {
+    const texts = await Text.find({});
+    res.status(200).json(texts);
+  } catch (error) {
+    res.status(500).send('Error fetching texts: ' + error.message);
+  }
 });
 
-const port = 5000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(5000, () => {
+  console.log('Server is running on port 5000');
 });
