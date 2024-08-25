@@ -1,10 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
 const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Use CORS middleware
+app.use(cors());
 
 mongoose.connect('mongodb+srv://raviravi18425:ravishankar@cluster0.1aej7.mongodb.net/sample?retryWrites=true&w=majority&appName=Cluster0')
   .then(() => console.log('Connected to MongoDB Atlas'))
@@ -29,7 +30,6 @@ app.post('/save-text', async (req, res) => {
   }
 });
 
-// New route to fetch all texts
 app.get('/get-texts', async (req, res) => {
   try {
     const texts = await Text.find({});
@@ -37,6 +37,14 @@ app.get('/get-texts', async (req, res) => {
   } catch (error) {
     res.status(500).send('Error fetching texts: ' + error.message);
   }
+});
+
+// Serve static files from the Vite frontend app (dist folder)
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Serve index.html for any unknown routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(5000, () => {
